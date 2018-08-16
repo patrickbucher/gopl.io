@@ -29,17 +29,12 @@ func main() {
 }
 
 func mandelbrot(z complex128) color.Color {
-	const (
-		iterations = 200
-		contrast   = 15
-	)
+	const contrast = 15
 	var v complex128
-	for n := uint8(0); n < iterations; n++ {
+	for n := 0; n < len(palette.Plan9); n++ {
 		v = v*v + z
 		if cmplx.Abs(v) > 2 {
-			colorRange := iterations/len(palette.Plan9) + 1
-			c := int(n) / colorRange
-			return palette.Plan9[c]
+			return palette.Plan9[n]
 		}
 	}
 	return color.Black
