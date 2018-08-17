@@ -59,7 +59,6 @@ func supersample(orig *image.RGBA) {
 }
 
 func mandelbrot(z complex128) color.Color {
-	const contrast = 15
 	var v complex128
 	for n := 0; n < len(palette.WebSafe); n++ {
 		v = v*v + z

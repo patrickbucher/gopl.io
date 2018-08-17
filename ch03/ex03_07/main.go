@@ -35,7 +35,6 @@ func main() {
 }
 
 func newton(z complex128, f, d func(complex128) complex128) color.Color {
-	const contrast = 15
 	var x complex128
 	for n := 0; n < len(palette.WebSafe); n++ {
 		x = x - f(z)/d(z)
