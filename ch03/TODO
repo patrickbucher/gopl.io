@@ -1,4 +1,4 @@
 - Chapter 3.3
     - Exercise 3.9: Write a web server that renders fractals and writes the
       image data to the client. Allow the client to specify the x, y, and zoom
-      values as parametrs to the HTTP request.
+      values as parameters to the HTTP request.
