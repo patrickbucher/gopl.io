@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"image"
 	"image/color"
-	"image/color/palette"
 	"image/png"
 	"math/big"
-	"math/cmplx"
 	"os"
+
+	"gopl.io/ch03/ex03_08"
 )
 
 var t = flag.String("t", "complex64", "The data type to be used,"+
@@ -37,57 +37,20 @@ func main() {
 			switch *t {
 			case "complex64":
 				z := complex(float32(x), float32(y))
-				c = mandelbrot64(z)
+				c = ex03_08.Mandelbrot64(z)
 			case "complex128":
 				z := complex(x, y)
-				c = mandelbrot128(z)
+				c = ex03_08.Mandelbrot128(z)
 			case "bigFloat":
 				z := complex(x, y)
-				c = mandelbrotBigFloat(z)
+				c = ex03_08.MandelbrotBigFloat(z)
+			case "bigRat":
+				xRat := big.NewRat(int64(px), int64(width*(xmax-xmin)+xmin))
+				yRat := big.NewRat(int64(py), int64(width*(ymax-ymin)+ymin))
+				c = ex03_08.MandelbrotBigRat(xRat, yRat)
 			}
 			img.Set(px, py, c)
 		}
 	}
 	png.Encode(os.Stdout, img) // NOTE: Ignoring errors
-}
-
-func mandelbrot64(z complex64) color.Color {
-	var v complex64
-	for n := 0; n < len(palette.WebSafe); n++ {
-		v = v*v + z
-		if cmplx.Abs(complex128(v)) > 2 {
-			return palette.WebSafe[n]
-		}
-	}
-	return color.Black
-}
-
-func mandelbrot128(z complex128) color.Color {
-	var v complex128
-	for n := 0; n < len(palette.WebSafe); n++ {
-		v = v*v + z
-		if cmplx.Abs(v) > 2 {
-			return palette.WebSafe[n]
-		}
-	}
-	return color.Black
-}
-
-func mandelbrotBigFloat(z complex128) color.Color {
-	r, i := big.NewFloat(real(z)), big.NewFloat(imag(z))
-	var vR, vI *big.Float
-	var b *big.Float
-	for n := 0; n < len(palette.WebSafe); n++ {
-		// FIXME: segfault
-		// v = v² + z
-		vR = b.Mul(vR, vR).Add(vR, r)
-		vI = b.Mul(vI, vI).Add(vI, i)
-		// c² = a² + b²
-		c := b.Sqrt(b.Add(b.Mul(vR, vR), b.Mul(vI, vI)))
-		abs, _ := c.Float64()
-		if abs > 2 {
-			return palette.WebSafe[n]
-		}
-	}
-	return color.Black
 }
