@@ -26,6 +26,10 @@ func TestRecursiveComma(t *testing.T) {
 	test(t, RecursiveComma)
 }
 
+func TestOptimizedComma(t *testing.T) {
+	test(t, OptimizedComma)
+}
+
 func test(t *testing.T, f func(string) string) {
 	for input, expected := range tests {
 		got := f(input)
@@ -44,5 +48,11 @@ func BenchmarkComma(b *testing.B) {
 func BenchmarkRecursiveComma(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		RecursiveComma(performanceTest)
+	}
+}
+
+func BenchmarkOptimizedComma(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		OptimizedComma(performanceTest)
 	}
 }
