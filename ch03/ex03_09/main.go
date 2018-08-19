@@ -54,16 +54,17 @@ func getFloat(f url.Values, name string, fallback float64) float64 {
 	return fallback
 }
 
-// FIXME: zoom doesn't work yet
 func mandelbrot(width, height int, zoom float64, w io.Writer) {
 	const xmin, ymin, xmax, ymax = -2, -2, +2, +2
 	img := image.NewRGBA(image.Rect(0, 0, width, height))
-	x0 := (int(float64(width)*zoom) - width) / 2
-	y0 := (int(float64(height)*zoom) - height) / 2
-	for py := x0; py < height+y0; py++ {
-		y := float64(py+y0)/float64(height)*zoom*(ymax-ymin) + ymin
-		for px := y0; px < height+x0; px++ {
-			x := float64(px+x0)/float64(width)*zoom*(xmax-xmin) + xmin
+	x0 := int((float64(width) * (zoom - 1)) / 2)
+	y0 := int((float64(height) * (zoom - 1)) / 2)
+	xE := int((float64(width) * (zoom + 1)) / 2)
+	yE := int((float64(height) * (zoom + 1)) / 2)
+	for px := x0; px < xE; px++ {
+		for py := y0; py < yE; py++ {
+			x := float64(px)/(float64(width)*zoom)*(xmax-xmin) + xmin
+			y := float64(py)/(float64(height)*zoom)*(ymax-ymin) + ymin
 			z := complex(x, y)
 			c := mandelbrotColor(z)
 			img.Set(px-x0, py-y0, c)
