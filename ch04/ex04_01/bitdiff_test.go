@@ -12,6 +12,7 @@ var bitDiffTests = []bitDiffTestCase{
 	{A: []byte{0}, B: []byte{0}, E: 0},
 	{A: []byte{0}, B: []byte{1}, E: 1},
 	{A: []byte("abc"), B: []byte("bbc"), E: 2},
+	{A: []byte{1, 2, 3}, B: []byte{1, 2}, E: -1},
 }
 
 func TestBitDiff(t *testing.T) {
