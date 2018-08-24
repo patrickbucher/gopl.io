@@ -1,0 +1,2 @@
+- [ ] rename `exYY_ZZ` folders (YY: chapter, ZZ: exercise) to `exZZ` (`mv`)
+- [ ] change `package exYY_ZZ` to `package exZZ` (`sed`)
