@@ -1,6 +1,6 @@
 package main
 
-import "strings"
+import "fmt"
 
 func main() {
 	fmt.Println("Hello, World")
