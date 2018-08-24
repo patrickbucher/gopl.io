@@ -1,4 +1,4 @@
-package ex04_01
+package ex01
 
 func BitDiff(a, b []byte) int {
 	if len(a) != len(b) {

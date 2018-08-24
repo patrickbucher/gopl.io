@@ -18,7 +18,7 @@ for e in ch*/ex*; do
     for f in `find "$new_folder" -type f | grep -E 'ex[[:digit:]]{2}_([[:digit:]]{2}).go$'`; do
         old_file="$f"
         new_file="`echo "$f" | sed -E 's/ex[[:digit:]]{2}_([[:digit:]]{2}).go$/ex\1.go/'`"
-        mv "$old_file" "$new_file"
+        git mv "$old_file" "$new_file"
     done
 
     # 3) packages

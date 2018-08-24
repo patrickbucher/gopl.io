@@ -10,7 +10,7 @@ import (
 	"math/big"
 	"os"
 
-	"gopl.io/ch03/ex03_08"
+	"gopl.io/ch03/ex08"
 )
 
 var t = flag.String("t", "complex64", "The data type to be used,"+
@@ -37,17 +37,17 @@ func main() {
 			switch *t {
 			case "complex64":
 				z := complex(float32(x), float32(y))
-				c = ex03_08.Mandelbrot64(z)
+				c = ex08.Mandelbrot64(z)
 			case "complex128":
 				z := complex(x, y)
-				c = ex03_08.Mandelbrot128(z)
+				c = ex08.Mandelbrot128(z)
 			case "bigFloat":
 				z := complex(x, y)
-				c = ex03_08.MandelbrotBigFloat(z)
+				c = ex08.MandelbrotBigFloat(z)
 			case "bigRat":
 				xRat := big.NewRat(int64(px), int64(width*(xmax-xmin)+xmin))
 				yRat := big.NewRat(int64(py), int64(width*(ymax-ymin)+ymin))
-				c = ex03_08.MandelbrotBigRat(xRat, yRat)
+				c = ex08.MandelbrotBigRat(xRat, yRat)
 			}
 			img.Set(px, py, c)
 		}

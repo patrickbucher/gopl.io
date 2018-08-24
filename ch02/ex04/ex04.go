@@ -1,4 +1,4 @@
-package ex02_04
+package ex04
 
 // PopCount returns the population count (number of set bits) of x.
 func PopCount(x uint64) int {

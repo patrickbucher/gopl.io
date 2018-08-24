@@ -1,4 +1,4 @@
-package ex03_08
+package ex08
 
 import (
 	"image/color"

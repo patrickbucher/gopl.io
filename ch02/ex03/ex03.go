@@ -1,4 +1,4 @@
-package ex02_03
+package ex03
 
 // pc[i] is the population count of i.
 var pc [256]byte

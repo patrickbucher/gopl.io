@@ -1,4 +1,4 @@
-package ex04_04
+package ex04
 
 // Rotate rotates slice s r times to the left.
 func Rotate(s []int, r int) []int {
