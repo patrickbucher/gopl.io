@@ -2,12 +2,10 @@ package ex04_10
 
 import "testing"
 
-type test struct {
+var tests = []struct {
 	Input    [3]int
 	Expected [3]int
-}
-
-var tests = []test{
+}{
 	{Input: [...]int{1, 2, 3}, Expected: [...]int{3, 2, 1}},
 }
 

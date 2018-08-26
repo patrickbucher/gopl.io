@@ -2,13 +2,11 @@ package ex12
 
 import "testing"
 
-type testCase struct {
+var tests = []struct {
 	A string
 	B string
 	E bool
-}
-
-var tests = []testCase{
+}{
 	{A: "gaggi", B: "gagig", E: true},
 	{A: "gaggi", B: "gakgi", E: false},
 	{A: "foobar", B: "raboof", E: true},
