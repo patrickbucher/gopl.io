@@ -1,0 +1,10 @@
+{
+    "title": "Some Random Issue",
+    "body": "All your base are belong to us",
+    "assignees": [
+        "patrickbucher"
+    ],
+    "labels": [
+        "bug"
+    ]
+}

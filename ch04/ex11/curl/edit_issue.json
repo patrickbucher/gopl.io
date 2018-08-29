@@ -1,0 +1,10 @@
+{
+    "title": "some issue I do not remotely care about",
+    "body": "blah, blah, blah...",
+    "assignees": [
+        "patrickbucher"
+    ],
+    "labels": [
+        "wontfix"
+    ]
+}
