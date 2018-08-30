@@ -16,4 +16,7 @@
 #curl -H "Authorization: token `cat ../.github_token`" -X DELETE https://api.github.com/repos/patrickbucher/gopl.io/issues/2/lock
 
 # list issues
-curl -H "Authorization: token `cat ../.github_token`" https://api.github.com/repos/patrickbucher/gopl.io/issues
+#curl -H "Authorization: token `cat ../.github_token`" https://api.github.com/repos/patrickbucher/gopl.io/issues
+
+# get an issue
+curl -H "Authorization: token `cat ../.github_token`" https://api.github.com/repos/patrickbucher/gopl.io/issues/2
