@@ -46,6 +46,21 @@ type Issue struct {
 	Labels    []string `json:"labels"`
 }
 
+type User struct {
+	Name string `json:"login"`
+}
+
+type Label struct {
+	Name string `json:"name"`
+}
+
+type IssueView struct {
+	Title    string  `json:"title"`
+	Body     string  `json:"body"`
+	Assignee User    `json:"assignee"`
+	Labels   []Label `json:"labels"`
+}
+
 func main() {
 	if len(os.Args) < 2 {
 		log.Fatalf("usage: %s [action]\n", os.Args[0])
@@ -77,16 +92,11 @@ func main() {
 			log.Fatalf("POST: %s\n", resp.Status)
 		}
 	case "read":
-		fmt.Printf("Issue #: ")
-		r := bufio.NewReader(os.Stdin)
-		input, err := r.ReadString('\n')
+		issueNumber, err := readIssueNumber()
 		if err != nil {
-			log.Fatalf("reading issue #: %v\n", err)
+			log.Fatal("error reading issue #: %v\n", err)
 		}
-		issueNumber, err := strconv.Atoi(strings.TrimSpace(input))
-		if err != nil {
-			log.Fatalf("parsing %q to int: %v\n", input, err)
-		}
+		// TODO: generalize issue retrievement
 		url := issuesURL + "/" + fmt.Sprintf("%d", issueNumber)
 		fmt.Println(url)
 		client := &http.Client{}
@@ -104,19 +114,55 @@ func main() {
 			log.Fatalf("GET: %s\n", resp.Status)
 		}
 		dec := json.NewDecoder(resp.Body)
-		var issue Issue // different structure for retrieval needed (see labels)
+		var issue IssueView
 		err = dec.Decode(&issue)
 		if err != nil {
 			log.Fatalf("error decoding response: %v\n", err)
 		}
-		fmt.Println(issue)
+		// TODO: end of generalize issue retrievement
+		printIssue(issue)
 	case "update":
-		log.Fatal("not implemented yet")
+		issueNumber, err := readIssueNumber()
+		if err != nil {
+			log.Fatal("error reading issue #: %v\n", err)
+		}
+		// TODO: retrieve issue, read in changed information (using editors), POST it
 	case "lock":
 		log.Fatal("not implemented yet")
+		// TODO: read in issue number; lock it, if found
 	case "unlock":
 		log.Fatal("not implemented yet")
+		// TODO: read in issue number; unlock it, if found
 	}
+}
+
+func readIssueNumber() (int, error) {
+	fmt.Printf("Issue #: ")
+	r := bufio.NewReader(os.Stdin)
+	input, err := r.ReadString('\n')
+	if err != nil {
+		return 0, fmt.Errorf("reading issue #: %v\n", err)
+	}
+	issueNumber, err := strconv.Atoi(strings.TrimSpace(input))
+	if err != nil {
+		return 0, fmt.Errorf("parsing %q to int: %v\n", input, err)
+	}
+	return issueNumber, nil
+}
+
+func printIssue(issue IssueView) {
+	fmt.Printf("Title:\t\t%s\n", issue.Title)
+	fmt.Printf("Assignee:\t%s\n", issue.Assignee.Name)
+	fmt.Printf("Labels:\t\t%s\n", fmtLabels(issue.Labels))
+	fmt.Printf("Body:\n\n%s\n", issue.Body)
+}
+
+func fmtLabels(labels []Label) string {
+	names := make([]string, len(labels))
+	for i := range labels {
+		names[i] = labels[i].Name
+	}
+	return strings.Join(names, ", ")
 }
 
 func readIssue() Issue {
