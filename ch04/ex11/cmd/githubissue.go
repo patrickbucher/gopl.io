@@ -113,8 +113,20 @@ func main() {
 				issueNumber, issue, err)
 		}
 	case "lock":
-		log.Fatal("not implemented yet")
-		// TODO: read in issue number; lock it, if found
+		issueNumber, err := readIssueNumber()
+		if err != nil {
+			log.Fatalf("error reading issue #: %v\n", err)
+		}
+		url := issuesURL + "/" + fmt.Sprintf("%d", issueNumber) + "/lock"
+		req, err := http.NewRequest("PUT", url, nil)
+		req.Header.Add("Authorization", "token "+token())
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Fatalf("PUT issue #%d: %v\n", issueNumber, err)
+		}
+		if resp.StatusCode != http.StatusNoContent {
+			log.Fatalf("PUT issue #%d: %s\n", resp.Status)
+		}
 	case "unlock":
 		log.Fatal("not implemented yet")
 		// TODO: read in issue number; unlock it, if found
