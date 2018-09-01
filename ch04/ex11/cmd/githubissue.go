@@ -113,24 +113,44 @@ func main() {
 				issueNumber, issue, err)
 		}
 	case "lock":
-		issueNumber, err := readIssueNumber()
+		req, err := createLockIssueRequest(issuesURL, "PUT")
 		if err != nil {
-			log.Fatalf("error reading issue #: %v\n", err)
+			log.Fatalf("error creating PUT request: %v\n", err)
 		}
-		url := issuesURL + "/" + fmt.Sprintf("%d", issueNumber) + "/lock"
-		req, err := http.NewRequest("PUT", url, nil)
-		req.Header.Add("Authorization", "token "+token())
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
-			log.Fatalf("PUT issue #%d: %v\n", issueNumber, err)
+			log.Fatalf("PUT lock: %v\n", err)
 		}
 		if resp.StatusCode != http.StatusNoContent {
-			log.Fatalf("PUT issue #%d: %s\n", resp.Status)
+			log.Fatalf("PUT lock: %s\n", resp.Status)
 		}
 	case "unlock":
-		log.Fatal("not implemented yet")
-		// TODO: read in issue number; unlock it, if found
+		req, err := createLockIssueRequest(issuesURL, "DELETE")
+		if err != nil {
+			log.Fatalf("error creating DELETE request: %v\n", err)
+		}
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			log.Fatalf("DELETE lock: %v\n", err)
+		}
+		if resp.StatusCode != http.StatusNoContent {
+			log.Fatalf("DELETE lock: %v\n", resp.Status)
+		}
 	}
+}
+
+func createLockIssueRequest(baseUrl, method string) (*http.Request, error) {
+	issueNumber, err := readIssueNumber()
+	if err != nil {
+		return nil, fmt.Errorf("error reading issue #: %v", err)
+	}
+	url := issuesURL + "/" + fmt.Sprintf("%d", issueNumber) + "/lock"
+	req, err := http.NewRequest(method, url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("create %s request to %s: %v\n", method, url, err)
+	}
+	req.Header.Add("Authorization", "token "+token())
+	return req, nil
 }
 
 func postIssue(issue *Issue, url string) error {
