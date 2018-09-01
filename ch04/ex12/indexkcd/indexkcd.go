@@ -16,7 +16,7 @@ import (
 const (
 	urlTemplate   = "https://xkcd.com/%d/info.0.json"
 	indexFile     = "indexkcd.json"
-	throttleEvery = 100
+	throttleAfter = 100
 	throttlePause = 100 * time.Millisecond
 )
 
@@ -38,7 +38,8 @@ func main() {
 	go func() {
 		finished := false
 		for number := 1; !finished; number++ {
-			if number%throttleEvery == 0 {
+			// sending out requests happens way faster than getting responsees
+			if number%throttleAfter == 0 {
 				time.Sleep(throttlePause)
 			}
 			select {
