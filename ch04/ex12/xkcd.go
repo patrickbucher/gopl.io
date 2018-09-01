@@ -5,6 +5,7 @@ type XKCD struct {
 	Title      string `json:"title"`
 	Transcript string `json:"transcript"`
 	Alt        string `json:"alt"`
+	URL        string `json:"img"`
 }
 
 type Index struct {
