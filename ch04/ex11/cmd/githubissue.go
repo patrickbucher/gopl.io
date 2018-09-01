@@ -1,5 +1,9 @@
 package main
 
+// TODO: make sure Title is stored without '\n' at the end (trim it)
+// TODO: update without input should keep the original content
+// TODO: multi word labels must not be split as fields, but by commas
+
 import (
 	"bufio"
 	"bytes"
@@ -72,61 +76,42 @@ func main() {
 	command := os.Args[1]
 	switch command {
 	case "create":
-		issue := readIssue()
-		json, err := json.Marshal(issue)
+		issue, err := readIssue()
 		if err != nil {
-			log.Fatalf("marshaling %v: %v\n", issue, err)
+			log.Fatalf("read issue: %v\n", err)
 		}
-		client := &http.Client{}
-		reader := bytes.NewReader(json)
-		req, err := http.NewRequest("POST", issuesURL, reader)
+		err = postIssue(issue, issuesURL)
 		if err != nil {
-			log.Fatalf("init POST to %s: %v\n", issuesURL, err)
-		}
-		req.Header.Add("Authorization", "token "+token())
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Fatalf("POST failed: %v\n", err)
-		}
-		if resp.StatusCode != http.StatusCreated {
-			log.Fatalf("POST: %s\n", resp.Status)
+			log.Fatalf("creating issue %#v: %v\n", issue, err)
 		}
 	case "read":
 		issueNumber, err := readIssueNumber()
 		if err != nil {
-			log.Fatal("error reading issue #: %v\n", err)
+			log.Fatalf("error reading issue #: %v\n", err)
 		}
-		// TODO: generalize issue retrievement
-		url := issuesURL + "/" + fmt.Sprintf("%d", issueNumber)
-		fmt.Println(url)
-		client := &http.Client{}
-		req, err := http.NewRequest("GET", url, nil)
-		if err != nil {
-			log.Fatalf("init GET to %s: %v\n", url, err)
+		if issue, err := fetchIssue(issueNumber); err != nil {
+			log.Fatalf("error fetching issue: %v\n", err)
+		} else {
+			printIssue(issue)
 		}
-		req.Header.Add("Authorization", "token "+token())
-		resp, err := client.Do(req)
-		if err != nil {
-			log.Fatalf("GET failed: %v\n", err)
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode != http.StatusOK {
-			log.Fatalf("GET: %s\n", resp.Status)
-		}
-		dec := json.NewDecoder(resp.Body)
-		var issue IssueView
-		err = dec.Decode(&issue)
-		if err != nil {
-			log.Fatalf("error decoding response: %v\n", err)
-		}
-		// TODO: end of generalize issue retrievement
-		printIssue(issue)
 	case "update":
 		issueNumber, err := readIssueNumber()
 		if err != nil {
-			log.Fatal("error reading issue #: %v\n", err)
+			log.Fatalf("error reading issue #: %v\n", err)
 		}
-		// TODO: retrieve issue, read in changed information (using editors), POST it
+		issueView, err := fetchIssue(issueNumber)
+		if err != nil {
+			log.Fatalf("error fetching issue for editing: %v\n", err)
+		}
+		issue, err := inputIssueUpdate(issueView)
+		if err != nil {
+			log.Fatalf("error on input issue update: %v\n", err)
+		}
+		err = postIssue(issue, issuesURL+"/"+fmt.Sprintf("%d", issueNumber))
+		if err != nil {
+			log.Fatalf("updating issue #%d as %#v: %v\n",
+				issueNumber, issue, err)
+		}
 	case "lock":
 		log.Fatal("not implemented yet")
 		// TODO: read in issue number; lock it, if found
@@ -134,6 +119,55 @@ func main() {
 		log.Fatal("not implemented yet")
 		// TODO: read in issue number; unlock it, if found
 	}
+}
+
+func postIssue(issue *Issue, url string) error {
+	json, err := json.Marshal(issue)
+	if err != nil {
+		return fmt.Errorf("marshaling %v: %v", issue, err)
+	}
+	client := &http.Client{}
+	reader := bytes.NewReader(json)
+	req, err := http.NewRequest("POST", url, reader)
+	if err != nil {
+		return fmt.Errorf("init POST to %s: %v", issuesURL, err)
+	}
+	req.Header.Add("Authorization", "token "+token())
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("POST failed: %v", err)
+	}
+	if resp.StatusCode != http.StatusCreated &&
+		resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("POST: %s", resp.Status)
+	}
+	return nil
+}
+
+func fetchIssue(issueNumber int) (*IssueView, error) {
+	url := issuesURL + "/" + fmt.Sprintf("%d", issueNumber)
+	fmt.Println(url)
+	client := &http.Client{}
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, fmt.Errorf("init GET to %s: %v\n", url, err)
+	}
+	req.Header.Add("Authorization", "token "+token())
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("GET failed: %v\n", err)
+	}
+	defer resp.Body.Close()
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("GET: %s\n", resp.Status)
+	}
+	dec := json.NewDecoder(resp.Body)
+	var issue IssueView
+	err = dec.Decode(&issue)
+	if err != nil {
+		return nil, fmt.Errorf("error decoding response: %v\n", err)
+	}
+	return &issue, nil
 }
 
 func readIssueNumber() (int, error) {
@@ -150,7 +184,7 @@ func readIssueNumber() (int, error) {
 	return issueNumber, nil
 }
 
-func printIssue(issue IssueView) {
+func printIssue(issue *IssueView) {
 	fmt.Printf("Title:\t\t%s\n", issue.Title)
 	fmt.Printf("Assignee:\t%s\n", issue.Assignee.Name)
 	fmt.Printf("Labels:\t\t%s\n", fmtLabels(issue.Labels))
@@ -165,30 +199,65 @@ func fmtLabels(labels []Label) string {
 	return strings.Join(names, ", ")
 }
 
-func readIssue() Issue {
-	// TODO expect existing issue, use and modify if given
+func extractLabelNames(labels []Label) []string {
+	labelNames := make([]string, len(labels))
+	for i := range labels {
+		labelNames[i] = labels[i].Name
+	}
+	return labelNames
+}
+
+func inputIssueUpdate(existing *IssueView) (*Issue, error) {
+	r := bufio.NewReader(os.Stdin)
+	fmt.Printf("New Title [old: %q]: ", existing.Title)
+	title, err := r.ReadString('\n')
+	if err != nil {
+		return nil, fmt.Errorf("reading title: %v", err)
+	}
+	fmt.Printf("Labels (%s) [old: %s]: ", strings.Join(labels, ", "),
+		strings.Join(extractLabelNames(existing.Labels), ", "))
+	labelInput, err := r.ReadString('\n')
+	if err != nil {
+		return nil, fmt.Errorf("reading labels: %v\n", err)
+	}
+	labelList := strings.Fields(labelInput)
+	if ok, wrongLabel := allContained(labelList, labels); !ok {
+		return nil, fmt.Errorf("illegal label %q\n", wrongLabel)
+	}
+	body, err := textInput(existing.Body)
+	if err != nil {
+		return nil, fmt.Errorf("updating body: %v", err)
+	}
+	return &Issue{
+		Title:     title,
+		Body:      body,
+		Labels:    labelList,
+		Assignees: []string{existing.Assignee.Name},
+	}, nil
+}
+
+func readIssue() (*Issue, error) {
 	r := bufio.NewReader(os.Stdin)
 	fmt.Printf("Title: ")
 	title, err := r.ReadString('\n')
 	if err != nil {
-		log.Fatalf("reading title: %v\n", err)
+		return nil, fmt.Errorf("reading title: %v", err)
 	}
 	fmt.Printf("Labels (%s): ", strings.Join(labels, ", "))
 	labelInput, err := r.ReadString('\n')
 	if err != nil {
-		log.Fatalf("reading labels: %v\n", err)
+		return nil, fmt.Errorf("reading labels: %v", err)
 	}
 	labelList := strings.Fields(labelInput)
 	if ok, wrongLabel := allContained(labelList, labels); !ok {
-		log.Fatalf("illegal label %s\n", wrongLabel)
+		return nil, fmt.Errorf("illegal label %s", wrongLabel)
 	}
-	// TODO if existing issue given, write text to file and pass in
-	body, err := textInput()
+	body, err := textInput("")
 	if err != nil {
-		log.Fatalf("text input failed: %v\n", err)
+		return nil, fmt.Errorf("text input failed: %v", err)
 	}
-	return Issue{Title: title, Body: body, Assignees: []string{assignee},
-		Labels: labelList}
+	return &Issue{Title: title, Body: body, Assignees: []string{assignee},
+		Labels: labelList}, nil
 }
 
 func token() string {
@@ -199,11 +268,17 @@ func token() string {
 	return strings.TrimSpace(string(data))
 }
 
-func textInput() (string, error) {
-	// TODO expect file param, us it if != nil, otherwise create temp file
+func textInput(content string) (string, error) {
 	file, err := ioutil.TempFile("", "githubissue")
 	if err != nil {
 		return "", fmt.Errorf("create temp file: %v", err)
+	}
+	if len(content) > 0 {
+		w := bufio.NewWriter(file)
+		w.WriteString(content)
+		if err := w.Flush(); err != nil {
+			return "", fmt.Errorf("unable to flush %s: %v", file.Name(), err)
+		}
 	}
 	if err = ex11.Edit(file.Name()); err != nil {
 		return "", fmt.Errorf("edit file %q: %v\n", file.Name(), err)
