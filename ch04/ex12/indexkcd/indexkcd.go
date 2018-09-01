@@ -3,50 +3,106 @@ package main
 import (
 	"bufio"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"os"
+	"sync"
+	"time"
 
 	"gopl.io/ch04/ex12"
 )
 
 const (
-	urlTemplate = "https://xkcd.com/%d/info.0.json"
-	indexFile   = "indexkcd.json"
+	urlTemplate   = "https://xkcd.com/%d/info.0.json"
+	indexFile     = "indexkcd.json"
+	throttleEvery = 100
+	throttlePause = 100 * time.Millisecond
 )
 
+var errNotFound error = errors.New("Not Found")
+
+type Result struct {
+	xkcd *ex12.XKCD
+	err  error
+}
+
+var wg sync.WaitGroup
+
 func main() {
-	finished := false
 	var entries []ex12.XKCD
-	for number := 1; !finished; number++ {
-		url := fmt.Sprintf(urlTemplate, number)
-		resp, err := http.Get(url)
-		if err != nil {
-			fmt.Fprintf(os.Stderr, "GET %s: %v\n", url, err)
-			os.Exit(1)
-		}
-		defer resp.Body.Close()
-		switch resp.StatusCode {
-		case http.StatusOK:
-			decoder := json.NewDecoder(resp.Body)
-			xkcd := ex12.XKCD{}
-			if err := decoder.Decode(&xkcd); err != nil {
-				fmt.Fprintf(os.Stderr, "Decode %d: %v\n", number, err)
-				os.Exit(1)
+	results := make(chan Result)
+	done := make(chan bool)
+	quitted := false
+	var started int
+	go func() {
+		finished := false
+		for number := 1; !finished; number++ {
+			if number%throttleEvery == 0 {
+				time.Sleep(throttlePause)
 			}
-			entries = append(entries, xkcd)
-		case http.StatusNotFound:
-			if number != 404 {
-				// easter egg: comic #404 yields 404
+			select {
+			case <-done:
 				finished = true
+			default:
+				wg.Add(1)
+				started++
+				go fetchXKCD(number, results)
 			}
-		default:
-			fmt.Fprintf(os.Stderr, "GET %s: %s", url, resp.Status)
+		}
+		wg.Wait()
+		close(results)
+	}()
+	for result := range results {
+		if result.err == errNotFound {
+			if !quitted {
+				done <- true
+			}
+			quitted = true
+		} else if result.err != nil {
+			fmt.Fprintf(os.Stderr, "%v\n", result.err)
 			os.Exit(1)
+		} else if result.xkcd != nil {
+			entries = append(entries, *result.xkcd)
 		}
 	}
 	index := ex12.Index{Entries: entries}
 	persist(&index, indexFile)
+}
+
+func fetchXKCD(number int, results chan<- Result) {
+	defer wg.Done()
+	url := fmt.Sprintf(urlTemplate, number)
+	resp, err := http.Get(url)
+	if err != nil {
+		results <- Result{
+			xkcd: nil,
+			err:  fmt.Errorf("GET %s: %v\n", url, err),
+		}
+	}
+	defer resp.Body.Close()
+	switch resp.StatusCode {
+	case http.StatusOK:
+		decoder := json.NewDecoder(resp.Body)
+		xkcd := ex12.XKCD{}
+		if err := decoder.Decode(&xkcd); err != nil {
+			results <- Result{
+				xkcd: nil,
+				err:  fmt.Errorf("Decode %d: %v\n", number, err),
+			}
+		} else {
+			results <- Result{xkcd: &xkcd, err: nil}
+		}
+	case http.StatusNotFound:
+		if number != 404 {
+			results <- Result{xkcd: nil, err: errNotFound}
+		}
+	default:
+		results <- Result{
+			xkcd: nil,
+			err:  fmt.Errorf("GET %s: %s", url, resp.Status),
+		}
+	}
 }
 
 func persist(index *ex12.Index, file string) error {

@@ -1,3 +1,11 @@
+Sequential:
+
 real    3m30.468s
 user    0m1.388s
 sys     0m0.580s
+
+Concurrent:
+
+real    0m9.791s
+user    0m6.850s
+sys     0m1.230s
