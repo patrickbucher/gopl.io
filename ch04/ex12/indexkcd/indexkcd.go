@@ -18,7 +18,7 @@ const (
 func main() {
 	finished := false
 	var entries []ex12.XKCD
-	for number := 2000; !finished; number++ {
+	for number := 1; !finished; number++ {
 		url := fmt.Sprintf(urlTemplate, number)
 		resp, err := http.Get(url)
 		if err != nil {
@@ -35,19 +35,21 @@ func main() {
 				os.Exit(1)
 			}
 			entries = append(entries, xkcd)
-			fmt.Println(number, len(entries), xkcd)
 		case http.StatusNotFound:
-			finished = true
+			if number != 404 {
+				// easter egg: comic #404 yields 404
+				finished = true
+			}
 		default:
 			fmt.Fprintf(os.Stderr, "GET %s: %s", url, resp.Status)
 			os.Exit(1)
 		}
 	}
 	index := ex12.Index{Entries: entries}
-	persist(index, indexFile)
+	persist(&index, indexFile)
 }
 
-func persist(index ex12.Index, file string) error {
+func persist(index *ex12.Index, file string) error {
 	if _, err := os.Stat(file); err == nil {
 		if err = os.Remove(file); err != nil {
 			return fmt.Errorf("delete %s: %v", file, err)
@@ -59,6 +61,6 @@ func persist(index ex12.Index, file string) error {
 		return fmt.Errorf("unable to create file %s: %v", file, err)
 	}
 	encoder := json.NewEncoder(bufio.NewWriter(f))
-	encoder.Encode(index)
-	return nil
+	encoder.SetIndent("", "  ")
+	return encoder.Encode(index)
 }
