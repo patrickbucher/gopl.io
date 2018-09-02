@@ -45,7 +45,7 @@ func SearchIssues(terms []string) (*IssuesSearchResult, error) {
 	// (Chapter 4 presents 'defer', which makes this simpler.)
 	if resp.StatusCode != http.StatusOK {
 		resp.Body.Close()
-		return nil, fmt.Errorf("search querz failed: %s", resp.Status)
+		return nil, fmt.Errorf("search query failed: %s", resp.Status)
 	}
 
 	var result IssuesSearchResult
