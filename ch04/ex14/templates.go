@@ -41,9 +41,11 @@ var IssueListHTML = `
 					<a href="user-{{.User.Id}}.html">{{.User.Name}}</a>
 				</td>
 				<td>
+					{{if ne 0 .Milestone.Number}}
 					<a href="milestone-{{.Milestone.Id}}.html">
 						{{.Milestone.Number}} {{.Milestone.Title}}
 					</a>
+					{{end}}
 				</td>
 				<td>{{.Title}}</td>
 			</tr>
@@ -132,8 +134,39 @@ var IssuePageTemplate = template.Must(template.New("issuePage").
 	}).
 	Parse(IssuePageHTML))
 
-// TODO user template
-// TODO milestone template
+var UserPageHTML = `
+<html>
+	<head>
+		<title>GitHub User #{{.Id}}</title>
+	</head>
+	<body>
+		<h1>{{.Name}}</h1>
+		<p>
+			<a target="_blank" href="{{.ProfileURL}}">Profile (JSON)</a>
+		</p>
+	</body>
+</html>
+`
+
+var UserPageTemplate = template.Must(template.New("userPage").
+	Parse(UserPageHTML))
+
+var MilestonePageHTML = `
+<html>
+	<head>
+		<title>GitHub Milestone #{{.Id}}</title>
+	</head>
+	<body>
+		<h1>{{.Number}} {{.Title}}</h1>
+		<pre>
+{{.Description}}
+		</pre>
+	</body>
+</html>
+`
+
+var MilestonePageTemplate = template.Must(template.New("milestonePage").
+	Parse(MilestonePageHTML))
 
 func extractRepoPath(url string) string {
 	elems := strings.Split(url, "/")
