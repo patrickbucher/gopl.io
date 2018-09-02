@@ -20,6 +20,7 @@ const (
 	issueFileTemplate     = "issue-%d.html"
 	userFileTemplate      = "user-%d.html"
 	milestoneFileTemplate = "milestone-%d.html"
+	pathSep               = string(os.PathSeparator)
 )
 
 func main() {
@@ -36,22 +37,47 @@ func main() {
 	if err := os.Mkdir(htmlDir, 0751); err != nil {
 		fail("error creating dir %s: %v\n", htmlDir, err)
 	}
-	issueListFileName := htmlDir + string(os.PathSeparator) + issueListFile
-	issueListHtml, err := os.Create(issueListFileName)
-	if err != nil {
-		fail("error creating file %s: %v\n", issueListFileName, err)
+	if err = createIssueList(issues); err != nil {
+		fail("error creating issue list: %v\n", err)
 	}
-	ex14.IssueListTemplate.Execute(issueListHtml, issues)
-	// TODO process single issues, users, milestones to html files
-	// TODO offer html files with a server
+	if err = createIssuePages(issues); err != nil {
+		fail("error creating issue pages: %v\n", err)
+	}
+	// createUserPages(issues)
+	// createMilestonePages(issues)
 	http.Handle("/", http.FileServer(http.Dir(htmlDir)))
 	log.Fatal(http.ListenAndServe(":8000", nil))
 }
 
+func createIssuePages(result *ex14.SearchResult) error {
+	for _, issue := range result.Issues {
+		issuePageFileName := fmt.Sprintf(issueFileTemplate, issue.Id)
+		issuePageFilePath := htmlDir + pathSep + issuePageFileName
+		issuePageHtml, err := os.Create(issuePageFilePath)
+		if err != nil {
+			return fmt.Errorf("error creating file %s: %v",
+				issuePageFilePath, err)
+		}
+		ex14.IssuePageTemplate.Execute(issuePageHtml, issue)
+	}
+	return nil
+}
+
+func createIssueList(result *ex14.SearchResult) error {
+	issueListFileName := htmlDir + pathSep + issueListFile
+	issueListHtml, err := os.Create(issueListFileName)
+	if err != nil {
+		return fmt.Errorf("error creating file %s: %v", issueListFileName, err)
+	}
+	ex14.IssueListTemplate.Execute(issueListHtml, result)
+	return nil
+}
+
 func searchIssues(searchTerms []string) (*ex14.SearchResult, error) {
 	var searchResult ex14.SearchResult
-	q := url.QueryEscape(strings.Join(searchTerms, " "))
-	searchURL := fmt.Sprintf("%s?q=%s", issuesURL, q)
+	query := strings.Join(searchTerms, " ")
+	escapedQuery := url.QueryEscape(query)
+	searchURL := fmt.Sprintf("%s?q=%s", issuesURL, escapedQuery)
 	resp, err := http.Get(searchURL)
 	if err != nil {
 		fail("GET %s: %v\n", searchURL, err)
@@ -64,7 +90,7 @@ func searchIssues(searchTerms []string) (*ex14.SearchResult, error) {
 	if err := decoder.Decode(&searchResult); err != nil {
 		return &searchResult, fmt.Errorf("unmarshal JSON: %v", err)
 	}
-	searchResult.SearchTerms = q
+	searchResult.SearchTerms = query
 	return &searchResult, nil
 }
 
