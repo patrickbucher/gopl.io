@@ -87,6 +87,6 @@ func get(url string) (*http.Response, error) {
 }
 
 func fail(format string, params ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, params)
+	fmt.Fprintf(os.Stderr, format, params...)
 	os.Exit(1)
 }

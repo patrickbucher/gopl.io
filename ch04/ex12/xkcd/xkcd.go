@@ -39,7 +39,7 @@ func main() {
 	}
 	indexFile, err := os.Open(indexFile)
 	if err != nil {
-		fail("unable to open %s: %v\n", indexFile, err)
+		fail("unable to open %s: %v\n", indexFile.Name(), err)
 	}
 	decoder := json.NewDecoder(bufio.NewReader(indexFile))
 	if err := decoder.Decode(&index); err != nil {
@@ -86,6 +86,6 @@ func contains(haystack, needle string) bool {
 }
 
 func fail(format string, params ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, params)
+	fmt.Fprintf(os.Stderr, format, params...)
 	os.Exit(1)
 }

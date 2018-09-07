@@ -143,6 +143,6 @@ func searchIssues(searchTerms []string) (*ex14.SearchResult, error) {
 }
 
 func fail(format string, params ...interface{}) {
-	fmt.Fprintf(os.Stderr, format, params)
+	fmt.Fprintf(os.Stderr, format, params...)
 	os.Exit(1)
 }
