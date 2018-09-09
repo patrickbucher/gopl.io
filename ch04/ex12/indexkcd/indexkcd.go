@@ -80,28 +80,29 @@ func fetchXKCD(number int, results chan<- Result) {
 			xkcd: nil,
 			err:  fmt.Errorf("GET %s: %v\n", url, err),
 		}
-	}
-	defer resp.Body.Close()
-	switch resp.StatusCode {
-	case http.StatusOK:
-		decoder := json.NewDecoder(resp.Body)
-		xkcd := ex12.XKCD{}
-		if err := decoder.Decode(&xkcd); err != nil {
+	} else {
+		defer resp.Body.Close()
+		switch resp.StatusCode {
+		case http.StatusOK:
+			decoder := json.NewDecoder(resp.Body)
+			xkcd := ex12.XKCD{}
+			if err := decoder.Decode(&xkcd); err != nil {
+				results <- Result{
+					xkcd: nil,
+					err:  fmt.Errorf("Decode %d: %v\n", number, err),
+				}
+			} else {
+				results <- Result{xkcd: &xkcd, err: nil}
+			}
+		case http.StatusNotFound:
+			if number != 404 {
+				results <- Result{xkcd: nil, err: errNotFound}
+			}
+		default:
 			results <- Result{
 				xkcd: nil,
-				err:  fmt.Errorf("Decode %d: %v\n", number, err),
+				err:  fmt.Errorf("GET %s: %s", url, resp.Status),
 			}
-		} else {
-			results <- Result{xkcd: &xkcd, err: nil}
-		}
-	case http.StatusNotFound:
-		if number != 404 {
-			results <- Result{xkcd: nil, err: errNotFound}
-		}
-	default:
-		results <- Result{
-			xkcd: nil,
-			err:  fmt.Errorf("GET %s: %s", url, resp.Status),
 		}
 	}
 }
