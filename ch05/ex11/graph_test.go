@@ -1,4 +1,4 @@
-package graph
+package ex11
 
 import "testing"
 

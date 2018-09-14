@@ -1,4 +1,4 @@
-package graph
+package ex11
 
 func IsCyclic(graph map[string][]string) bool {
 	for origin := range graph {
