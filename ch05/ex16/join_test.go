@@ -33,7 +33,7 @@ func TestJoin(t *testing.T) {
 		input := tests[i].Parts
 		sep := tests[i].Separator
 		expected := tests[i].Result
-		got := Join(sep, input)
+		got := Join(sep, input...)
 		if got != expected {
 			t.Errorf("join %v with '%s', expected: '%s' but was '%s'\n",
 				input, sep, expected, got)

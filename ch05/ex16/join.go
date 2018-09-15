@@ -2,7 +2,7 @@ package ex16
 
 import "bytes"
 
-func Join(sep string, parts []string) string {
+func Join(sep string, parts ...string) string {
 	if len(parts) == 0 {
 		return ""
 	}
