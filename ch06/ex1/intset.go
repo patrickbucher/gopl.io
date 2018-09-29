@@ -57,3 +57,38 @@ func (s *IntSet) String() string {
 	buf.WriteByte('}')
 	return buf.String()
 }
+
+// Len returns the number of elements
+func (s *IntSet) Len() int {
+	var n int
+	for _, word := range s.words {
+		for i := 0; i < 64; i++ {
+			if word&(1<<uint(i)) != 0 {
+				n++
+			}
+		}
+	}
+	return n
+}
+
+// Remove removes x from the set
+func (s *IntSet) Remove(x int) {
+	word, bit := x/64, uint(x%64)
+	s.words[word] &= ^(1 << bit)
+}
+
+// Clear removes all the elements from the set
+func (s *IntSet) Clear() {
+	for i := range s.words {
+		s.words[i] &= 0
+	}
+}
+
+// Copy returns a copy of the set
+func (s *IntSet) Copy() *IntSet {
+	cpy := &IntSet{}
+	for i := range s.words {
+		cpy.words = append(cpy.words, s.words[i])
+	}
+	return cpy
+}
