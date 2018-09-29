@@ -92,3 +92,10 @@ func (s *IntSet) Copy() *IntSet {
 	}
 	return cpy
 }
+
+// AddAll adds the given elements to the set
+func (s *IntSet) AddAll(xs ...int) {
+	for i := range xs {
+		s.Add(xs[i])
+	}
+}

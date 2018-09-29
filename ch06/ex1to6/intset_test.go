@@ -108,6 +108,17 @@ func TestCopy(t *testing.T) {
 	}
 }
 
+func TestAddAll(t *testing.T) {
+	var set IntSet
+	numbers := randomNumbers(1, 100, testSize)
+	set.AddAll(numbers...)
+	for _, n := range numbers {
+		if !set.Has(n) {
+			t.Errorf("value %d is missing in set\n", n)
+		}
+	}
+}
+
 func assertLen(t *testing.T, expected int, set IntSet) {
 	if actual := set.Len(); actual != expected {
 		t.Errorf("expected set len %d, but was %d\n", expected, actual)
