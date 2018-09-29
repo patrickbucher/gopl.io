@@ -149,6 +149,24 @@ func TestSymmetricDifference(t *testing.T) {
 	testHas(a, negative, positive, "symmetric difference", t)
 }
 
+func TestElem(t *testing.T) {
+	var s IntSet
+	numbers := []int{2, 4, 8, 16, 32, 64, 128, 256}
+	for _, n := range numbers {
+		s.Add(n)
+	}
+	elems := s.Elem()
+	if len(elems) != s.Len() {
+		t.Errorf("set and element slide have different lengths: %d != %d\n",
+			len(elems), s.Len())
+	}
+	for _, e := range elems {
+		if !s.Has(e) {
+			t.Errorf("%d must not be in the set\n", e)
+		}
+	}
+}
+
 func testHas(set *IntSet, negative, positive []int, desc string, t *testing.T) {
 	for i := range positive {
 		if !set.Has(positive[i]) {

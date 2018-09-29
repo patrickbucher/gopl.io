@@ -132,3 +132,16 @@ func (s *IntSet) Copy() *IntSet {
 	}
 	return cpy
 }
+
+// Elem returns a slice containing the elements of s.
+func (s *IntSet) Elem() []int {
+	var elems = make([]int, 0)
+	for i := range s.words {
+		for j := 0; j < 64; j++ {
+			if val := s.words[i] & (1 << uint(j)); val != 0 {
+				elems = append(elems, i*64+j)
+			}
+		}
+	}
+	return elems
+}
