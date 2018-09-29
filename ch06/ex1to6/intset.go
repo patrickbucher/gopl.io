@@ -26,11 +26,51 @@ func (s *IntSet) Add(x int) {
 	s.words[word] |= 1 << bit
 }
 
+// AddAll adds the given elements to the set.
+func (s *IntSet) AddAll(xs ...int) {
+	for i := range xs {
+		s.Add(xs[i])
+	}
+}
+
 // UnionWith sets s to the union of s and t.
 func (s *IntSet) UnionWith(t *IntSet) {
 	for i, tword := range t.words {
 		if i < len(s.words) {
+			// OR logic
 			s.words[i] |= tword
+		} else {
+			s.words = append(s.words, tword)
+		}
+	}
+}
+
+// IntersectWith sets s to the intersect of s and t.
+func (s *IntSet) IntersectWith(t *IntSet) {
+	for i, tword := range t.words {
+		if i < len(s.words) {
+			// AND logic
+			s.words[i] &= tword
+		}
+	}
+}
+
+// DifferenceWith sets s to the difference of s and t.
+func (s *IntSet) DifferenceWith(t *IntSet) {
+	for i, tword := range t.words {
+		if i < len(s.words) {
+			// NAND logic
+			s.words[i] &^= tword
+		}
+	}
+}
+
+// SymmetricDifference sets s to the symmetric difference of s and t.
+func (s *IntSet) SymmetricDifference(t *IntSet) {
+	for i, tword := range t.words {
+		if i < len(s.words) {
+			// XOR logic
+			s.words[i] ^= tword
 		} else {
 			s.words = append(s.words, tword)
 		}
@@ -58,7 +98,7 @@ func (s *IntSet) String() string {
 	return buf.String()
 }
 
-// Len returns the number of elements
+// Len returns the number of elements.
 func (s *IntSet) Len() int {
 	var n int
 	for _, word := range s.words {
@@ -71,31 +111,24 @@ func (s *IntSet) Len() int {
 	return n
 }
 
-// Remove removes x from the set
+// Remove removes x from the set.
 func (s *IntSet) Remove(x int) {
 	word, bit := x/64, uint(x%64)
 	s.words[word] &= ^(1 << bit)
 }
 
-// Clear removes all the elements from the set
+// Clear removes all the elements from the set.
 func (s *IntSet) Clear() {
 	for i := range s.words {
 		s.words[i] &= 0
 	}
 }
 
-// Copy returns a copy of the set
+// Copy returns a copy of the set.
 func (s *IntSet) Copy() *IntSet {
 	cpy := &IntSet{}
 	for i := range s.words {
 		cpy.words = append(cpy.words, s.words[i])
 	}
 	return cpy
-}
-
-// AddAll adds the given elements to the set
-func (s *IntSet) AddAll(xs ...int) {
-	for i := range xs {
-		s.Add(xs[i])
-	}
 }

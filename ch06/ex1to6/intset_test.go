@@ -119,6 +119,49 @@ func TestAddAll(t *testing.T) {
 	}
 }
 
+func TestIntersect(t *testing.T) {
+	a, b := &IntSet{}, &IntSet{}
+	a.AddAll(5, 10, 15, 20, 25, 30)
+	b.AddAll(10, 20, 30, 40, 50, 60)
+	positive := []int{10, 20, 30}
+	negative := []int{5, 15, 25, 40, 50, 60}
+	a.IntersectWith(b)
+	testHas(a, negative, positive, "intersection", t)
+}
+
+func TestDifference(t *testing.T) {
+	a, b := &IntSet{}, &IntSet{}
+	a.AddAll(3, 6, 9, 12, 15, 18, 21)
+	b.AddAll(6, 12, 18, 24, 30, 36)
+	positive := []int{3, 9, 15, 21}
+	negative := []int{6, 12, 18, 24, 30, 36}
+	a.DifferenceWith(b)
+	testHas(a, negative, positive, "difference", t)
+}
+
+func TestSymmetricDifference(t *testing.T) {
+	a, b := &IntSet{}, &IntSet{}
+	a.AddAll(2, 4, 6, 8, 10, 12, 14)
+	b.AddAll(3, 6, 9, 12, 15, 18)
+	positive := []int{2, 3, 4, 8, 9, 10, 14, 15, 18}
+	negative := []int{6, 12}
+	a.SymmetricDifference(b)
+	testHas(a, negative, positive, "symmetric difference", t)
+}
+
+func testHas(set *IntSet, negative, positive []int, desc string, t *testing.T) {
+	for i := range positive {
+		if !set.Has(positive[i]) {
+			t.Errorf("%d missing in %s\n", positive[i], desc)
+		}
+	}
+	for i := range negative {
+		if set.Has(negative[i]) {
+			t.Errorf("%d too much in %s\n", negative[i], desc)
+		}
+	}
+}
+
 func assertLen(t *testing.T, expected int, set IntSet) {
 	if actual := set.Len(); actual != expected {
 		t.Errorf("expected set len %d, but was %d\n", expected, actual)
