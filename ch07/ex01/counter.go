@@ -12,39 +12,32 @@ func (c *WordCounter) Write(p []byte) (int, error) {
 	var n int
 	scanner := bufio.NewScanner(bytes.NewReader(p))
 	scanner.Split(bufio.ScanWords)
-	for {
-		ok := scanner.Scan()
-		err := scanner.Err()
-		if err != nil {
-			return n, fmt.Errorf("error counting words: %v", err)
-		}
-		if ok {
-			*c++
-			n += len(scanner.Bytes())
-		} else {
-			break
-		}
-	}
-	return n, nil
+	words, n, err := count(scanner)
+	*c += WordCounter(words)
+	return n, err
 }
 
 type LineCounter int
 
 func (c *LineCounter) Write(p []byte) (int, error) {
-	var n int
 	scanner := bufio.NewScanner(bytes.NewReader(p))
+	lines, n, err := count(scanner)
+	*c += LineCounter(lines)
+	return n, err
+}
+
+func count(scanner *bufio.Scanner) (units, bytes int, err error) {
 	for {
 		ok := scanner.Scan()
-		err := scanner.Err()
-		if err != nil {
-			return n, fmt.Errorf("error counting lines: %v", err)
+		if !ok {
+			return units, bytes, fmt.Errorf("error counting using scanner %v", scanner)
 		}
 		if ok {
-			*c++
-			n += len(scanner.Bytes())
+			units++
+			bytes += len(scanner.Bytes())
 		} else {
 			break
 		}
 	}
-	return n, nil
+	return units, bytes, scanner.Err()
 }
