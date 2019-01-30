@@ -16,6 +16,7 @@ type Counter struct {
 }
 
 func (c *Counter) Write(p []byte) (n int, err error) {
-	c.count += int64(len(p))
-	return c.writer.Write(p)
+	n, err = c.writer.Write(p)
+	c.count += int64(n)
+	return n, err
 }
