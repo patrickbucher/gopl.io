@@ -15,9 +15,9 @@ func TestEmptyString(t *testing.T) {
 
 func TestShortString(t *testing.T) {
 	var tree *Tree
-	Add(tree, 2)
-	Add(tree, 1)
-	Add(tree, 3)
+	tree = Add(tree, 2)
+	tree = Add(tree, 1)
+	tree = Add(tree, 3)
 	expected := "[1, 2, 3]"
 	got := tree.String()
 	assertEquals(t, expected, got)
@@ -28,7 +28,7 @@ func TestLongString(t *testing.T) {
 	var tree *Tree
 	values := make([]string, 0)
 	for i := 0; i < 100; i++ {
-		Add(tree, i)
+		tree = Add(tree, i)
 		values = append(values, strconv.Itoa(i))
 	}
 	expected := "[" + strings.Join(values, ", ") + "]"
