@@ -67,3 +67,18 @@ Store the coverage report instead of opening it:
 Run the benchmarks (matching the pattern `.`, thus any benchmark):
 
     go test -bench=.
+
+## Go Modules
+
+Init a new module `foo`:
+
+    go mod init foo
+
+Creates a new file `go.mod`:
+
+    module foo
+
+Automatically add dependencies based on the code (say, `import
+"golang.org/x/net/html"` is in the code):
+
+    go mod tidy
