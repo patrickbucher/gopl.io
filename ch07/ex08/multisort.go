@@ -41,6 +41,11 @@ func (e byIQ) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
 
 type payroll []*Employee
 
+// TODO: Provide a structure containing the employee slice, and a slice of
+// sort.Interface that is used as a sort stack (with a limited size and unique
+// entries). If the sort stack is [foo,bar,qux] before a sort operation, it
+// becomes [bar,foo,qux] after the the bar search operation.
+
 func (p payroll) String() string {
 	const format = "%v\t%v\t%3v\n"
 	buf := bytes.NewBufferString("")
