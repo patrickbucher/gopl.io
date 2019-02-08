@@ -10,16 +10,21 @@ import (
 type Employee struct {
 	Name   string
 	Salary int
-	IQ     uint8
+	Sex    string
 }
 
 var employees = []*Employee{
-	{"Catbert", 250000, 159},
-	{"Dilbert", 120000, 120},
-	{"Wally", 120000, 97},
-	{"Alice", 120000, 130},
-	{"Boss", 250000, 81},
+	{"Arthur", 170000, "M"},
+	{"Alice", 160000, "F"},
+	{"Benno", 150000, "M"},
+	{"Bertha", 140000, "F"},
+	{"Charles", 130000, "M"},
+	{"Charlene", 120000, "F"},
+	{"Daniel", 110000, "M"},
+	{"Dorothea", 100000, "F"},
 }
+
+type Payroll []*Employee
 
 type byName []*Employee
 
@@ -33,43 +38,65 @@ func (e bySalary) Len() int           { return len(e) }
 func (e bySalary) Less(i, j int) bool { return e[i].Salary < e[j].Salary }
 func (e bySalary) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
 
-type byIQ []*Employee
+type bySex []*Employee
 
-func (e byIQ) Len() int           { return len(e) }
-func (e byIQ) Less(i, j int) bool { return e[i].IQ < e[j].IQ }
-func (e byIQ) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
+func (e bySex) Len() int           { return len(e) }
+func (e bySex) Less(i, j int) bool { return e[i].Sex < e[j].Sex }
+func (e bySex) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
 
-type payroll []*Employee
+type Multisort struct {
+	criteria []sort.Interface
+}
 
-// TODO: Provide a structure containing the employee slice, and a slice of
-// sort.Interface that is used as a sort stack (with a limited size and unique
-// entries). If the sort stack is [foo,bar,qux] before a sort operation, it
-// becomes [bar,foo,qux] after the the bar search operation.
+func (m Multisort) apply(criterion sort.Interface) {
+	criteria := make([]sort.Interface, len(m.criteria))
+	// recycle the criteria used before
+	for _, s := range m.criteria {
+		if criterion != s {
+			// except the latest
+			criteria = append(criteria, s)
+		}
+	}
+	// use the fresh criterion at the end of the sort chain
+	criteria = append(criteria, criterion)
+	for _, s := range criteria {
+		fmt.Println("sort")
+		sort.Sort(s)
+	}
+	m.criteria = criteria
+}
 
-func (p payroll) String() string {
-	const format = "%v\t%v\t%3v\n"
+func (p Payroll) String() string {
+	const format = "%v\t%v\t%v\n"
 	buf := bytes.NewBufferString("")
 	tw := new(tabwriter.Writer).Init(buf, 0, 8, 2, ' ', 0)
-	fmt.Fprintf(tw, format, "Name", "Salary", "IQ")
-	fmt.Fprintf(tw, format, "----", "------", "--")
+	fmt.Fprintf(tw, format, "Name", "Salary", "Sex")
+	fmt.Fprintf(tw, format, "----", "------", "---")
 	for _, e := range p {
-		fmt.Fprintf(tw, format, e.Name, e.Salary, e.IQ)
+		fmt.Fprintf(tw, format, e.Name, e.Salary, e.Sex)
 	}
 	tw.Flush()
 	return buf.String()
 }
 
 func main() {
-	var p payroll
-	p = employees
-	fmt.Println(p)
+	var sorter Multisort
 
-	sort.Sort(byName(employees))
-	fmt.Println(p)
+	payroll := Payroll(employees)
+	fmt.Println(payroll)
 
-	sort.Sort(byIQ(employees))
-	fmt.Println(p)
+	salaryCriterion := bySalary(payroll)
+	sexCriterion := bySex(payroll)
+	nameCriterion := byName(payroll)
 
-	sort.Sort(bySalary(employees))
-	fmt.Println(p)
+	// chained sort: "stable"
+	sorter.apply(salaryCriterion)
+	sorter.apply(sexCriterion)
+	fmt.Println(payroll)
+
+	// multiple sorts in a row: could be unstable... (is not)
+	sort.Sort(nameCriterion) // back to start
+	sort.Sort(salaryCriterion)
+	sort.Sort(sexCriterion)
+	fmt.Println(payroll)
 }
