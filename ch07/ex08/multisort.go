@@ -60,7 +60,6 @@ func (m Multisort) apply(criterion sort.Interface) {
 	// use the fresh criterion at the end of the sort chain
 	criteria = append(criteria, criterion)
 	for _, s := range criteria {
-		fmt.Println("sort")
 		sort.Sort(s)
 	}
 	m.criteria = criteria
@@ -90,6 +89,7 @@ func main() {
 	nameCriterion := byName(payroll)
 
 	// chained sort: "stable"
+	sorter.apply(nameCriterion)
 	sorter.apply(salaryCriterion)
 	sorter.apply(sexCriterion)
 	fmt.Println(payroll)
