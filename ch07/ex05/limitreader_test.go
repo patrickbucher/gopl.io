@@ -6,8 +6,6 @@ import (
 	"testing"
 )
 
-const input = "123456789"
-
 var tests = []struct {
 	input        string
 	limit        int64
@@ -24,7 +22,7 @@ func TestLimitReader(t *testing.T) {
 		reader := strings.NewReader(tests[i].input)
 		limit := tests[i].limit
 		limitReader := LimitReader(reader, int64(limit))
-		buffer := make([]byte, len(input))
+		buffer := make([]byte, len(tests[i].input))
 		n, err := limitReader.Read(buffer)
 		expectedRead := tests[i].expectedRead
 		if n != expectedRead {
