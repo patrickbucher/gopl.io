@@ -28,16 +28,11 @@ func (c *LineCounter) Write(p []byte) (int, error) {
 
 func count(scanner *bufio.Scanner) (units, bytes int, err error) {
 	for {
-		ok := scanner.Scan()
-		if !ok {
+		if ok := scanner.Scan(); !ok {
 			return units, bytes, fmt.Errorf("error counting using scanner %v", scanner)
 		}
-		if ok {
-			units++
-			bytes += len(scanner.Bytes())
-		} else {
-			break
-		}
+		units++
+		bytes += len(scanner.Bytes())
 	}
 	return units, bytes, scanner.Err()
 }
