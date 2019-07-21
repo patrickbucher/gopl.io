@@ -18,9 +18,9 @@ var db = database{"shoes": 50, "socks": 5}
 func main() {
 	http.HandleFunc("/list", http.HandlerFunc(db.list))
 	http.HandleFunc("/create", http.HandlerFunc(db.create))
-	http.HandleFunc("/read", http.HandlerFunc(db.create))
-	http.HandleFunc("/update", http.HandlerFunc(db.create))
-	http.HandleFunc("/delete", http.HandlerFunc(db.create))
+	http.HandleFunc("/read", http.HandlerFunc(db.read))
+	http.HandleFunc("/update", http.HandlerFunc(db.update))
+	http.HandleFunc("/delete", http.HandlerFunc(db.delete))
 	http.HandleFunc("/price", http.HandlerFunc(db.price))
 	log.Fatal(http.ListenAndServe("localhost:8000", nil))
 }
@@ -55,13 +55,29 @@ func (db database) create(w http.ResponseWriter, req *http.Request) {
 	if err != nil {
 		msg := fmt.Sprintf("parsing price '%s' as float: %v", priceStr, err)
 		http.Error(w, msg, 400)
+		return
 	}
 	db[item] = dollars(price)
 	w.WriteHeader(http.StatusCreated)
 }
 
 func (db database) read(w http.ResponseWriter, req *http.Request) {
-	fail(501, w)
+	if req.Method != "GET" {
+		fail(405, w)
+		return
+	}
+	item := req.FormValue("item")
+	if item == "" {
+		http.Error(w, "field 'item' missing", 400)
+		return
+	}
+	price, exists := db[item]
+	if !exists {
+		msg := fmt.Sprintf("the item '%s' does not exist", item)
+		http.Error(w, msg, 404)
+		return
+	}
+	fmt.Fprintf(w, "%s: %s\n", item, price)
 }
 
 func (db database) update(w http.ResponseWriter, req *http.Request) {
