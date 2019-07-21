@@ -33,28 +33,28 @@ func (db database) list(w http.ResponseWriter, req *http.Request) {
 
 func (db database) create(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "POST" {
-		fail(405, w)
+		fail(http.StatusMethodNotAllowed, w)
 		return
 	}
 	item := req.FormValue("item")
 	if item == "" {
-		http.Error(w, "field 'item' missing", 400)
+		http.Error(w, "field 'item' missing", http.StatusBadRequest)
 		return
 	}
 	if _, exists := db[item]; exists {
 		msg := fmt.Sprintf("the item '%s' already exists", item)
-		http.Error(w, msg, 409)
+		http.Error(w, msg, http.StatusConflict)
 		return
 	}
 	priceStr := req.FormValue("price")
 	if priceStr == "" {
-		http.Error(w, "field 'price' missing", 400)
+		http.Error(w, "field 'price' missing", http.StatusBadRequest)
 		return
 	}
 	price, err := strconv.ParseFloat(priceStr, 32)
 	if err != nil {
 		msg := fmt.Sprintf("parsing price '%s' as float: %v", priceStr, err)
-		http.Error(w, msg, 400)
+		http.Error(w, msg, http.StatusBadRequest)
 		return
 	}
 	db[item] = dollars(price)
@@ -63,12 +63,12 @@ func (db database) create(w http.ResponseWriter, req *http.Request) {
 
 func (db database) read(w http.ResponseWriter, req *http.Request) {
 	if req.Method != "GET" {
-		fail(405, w)
+		fail(http.StatusMethodNotAllowed, w)
 		return
 	}
 	item := req.FormValue("item")
 	if item == "" {
-		http.Error(w, "field 'item' missing", 400)
+		http.Error(w, "field 'item' missing", http.StatusBadRequest)
 		return
 	}
 	price, exists := db[item]
@@ -81,7 +81,36 @@ func (db database) read(w http.ResponseWriter, req *http.Request) {
 }
 
 func (db database) update(w http.ResponseWriter, req *http.Request) {
-	fail(501, w)
+	if req.Method != "PATCH" {
+		fail(http.StatusMethodNotAllowed, w)
+		return
+	}
+	item := req.FormValue("item")
+	if item == "" {
+		http.Error(w, "field 'item' missing", http.StatusBadRequest)
+		return
+	}
+	if _, exists := db[item]; !exists {
+		msg := fmt.Sprintf("the item '%s' does not exist", item)
+		http.Error(w, msg, http.StatusNotFound)
+		return
+	}
+	priceStr := req.FormValue("price")
+	if priceStr == "" {
+		http.Error(w, "field 'price' missing", http.StatusBadRequest)
+		return
+	}
+	price, err := strconv.ParseFloat(priceStr, 32)
+	if err != nil {
+		msg := fmt.Sprintf("parsing price '%s' as float: %v", priceStr, err)
+		http.Error(w, msg, http.StatusBadRequest)
+		return
+	}
+	if price <= 0 {
+		http.Error(w, "price must not be negative", http.StatusBadRequest)
+		return
+	}
+	db[item] = dollars(price)
 }
 
 func (db database) delete(w http.ResponseWriter, req *http.Request) {
