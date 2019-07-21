@@ -1,5 +1,8 @@
 #!/bin/sh
 
+go run shop.go &
+proc="$!"
+
 host=localhost:8000
 
 echo 'list initial items'
@@ -30,3 +33,5 @@ curl -X DELETE "${host}/delete?item=hat"
 
 echo 'list final items'
 curl "${host}/list"
+
+kill $proc
