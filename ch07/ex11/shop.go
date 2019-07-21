@@ -74,7 +74,7 @@ func (db database) read(w http.ResponseWriter, req *http.Request) {
 	price, exists := db[item]
 	if !exists {
 		msg := fmt.Sprintf("the item '%s' does not exist", item)
-		http.Error(w, msg, 404)
+		http.Error(w, msg, http.StatusNotFound)
 		return
 	}
 	fmt.Fprintf(w, "%s: %s\n", item, price)
@@ -114,14 +114,28 @@ func (db database) update(w http.ResponseWriter, req *http.Request) {
 }
 
 func (db database) delete(w http.ResponseWriter, req *http.Request) {
-	fail(501, w)
+	if req.Method != "DELETE" {
+		fail(http.StatusMethodNotAllowed, w)
+		return
+	}
+	item := req.FormValue("item")
+	if item == "" {
+		http.Error(w, "field 'item' missing", http.StatusBadRequest)
+		return
+	}
+	if _, exists := db[item]; !exists {
+		msg := fmt.Sprintf("the item '%s' does not exist", item)
+		http.Error(w, msg, http.StatusNotFound)
+		return
+	}
+	delete(db, item)
 }
 
 func (db database) price(w http.ResponseWriter, req *http.Request) {
 	item := req.URL.Query().Get("item")
 	price, ok := db[item]
 	if !ok {
-		w.WriteHeader(http.StatusNotFound) // 404
+		w.WriteHeader(http.StatusNotFound)
 		fmt.Fprintf(w, "n such item: %q\n", item)
 		return
 	}

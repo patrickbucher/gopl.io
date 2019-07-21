@@ -22,3 +22,11 @@ curl -X PATCH "${host}/update?item=hat&price=79.90"
 curl "${host}/read?item=belt"
 curl "${host}/read?item=shirt"
 curl "${host}/read?item=hat"
+
+echo 'delete some items'
+curl -X DELETE "${host}/delete?item=belt"
+curl -X DELETE "${host}/delete?item=shirt"
+curl -X DELETE "${host}/delete?item=hat"
+
+echo 'list final items'
+curl "${host}/list"
