@@ -3,6 +3,7 @@
 trap "kill 0" EXIT
 
 go run shop.go &
+sleep 1
 
 host=localhost:8000
 
