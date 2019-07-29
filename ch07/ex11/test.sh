@@ -1,7 +1,6 @@
 #!/bin/sh
 
-trap "kill 0" EXIT
-
+trap 'kill 0' exit
 go run shop.go &
 sleep 1
 
