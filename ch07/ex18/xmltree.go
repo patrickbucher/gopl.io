@@ -20,41 +20,64 @@ type Element struct {
 
 func main() {
 	dec := xml.NewDecoder(os.Stdin)
-	_, err := dec.Token() // _: root
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "no root node found: %v\n", err)
-		os.Exit(1)
-	}
-	// rootElem := root.(*xml.StartElement)
-	// rootNode := Element{Type: rootElem.Name, Attr: rootElem.Attr, Children: []Node{}}
-	// var nodeStack []Node
-	level := 0
+	var nodeStack []*Element
 	for {
 		tok, err := dec.Token()
 		if err == io.EOF {
 			break
 		} else if err != nil {
 			fmt.Fprintf(os.Stderr, "iterating over tokens: %v\n", err)
+			os.Exit(1)
 		}
 		switch tok := tok.(type) {
 		case xml.StartElement:
-			fmt.Printf("%s", strings.Repeat("\t", level))
-			fmt.Println("start", tok.Name.Local)
-			level += 1
-			// add to topmost nodeStack item as child
-			// add current element to stack
+			var children []Node
+			current := &Element{tok.Name, tok.Attr, children}
+			if len(nodeStack) > 0 {
+				var parentNode *Element
+				parentNode = nodeStack[len(nodeStack)-1]
+				parentNode.Children = append(parentNode.Children, current)
+			}
+			nodeStack = append(nodeStack, current)
 		case xml.EndElement:
-			level -= 1
-			fmt.Printf("%s", strings.Repeat("\t", level))
-			fmt.Println("end", tok.Name.Local)
-			// pop topmost nodeStack item
+			if len(nodeStack) > 1 { // don't pop root element
+				nodeStack = nodeStack[:len(nodeStack)-1]
+			}
 		case xml.CharData:
 			str := strings.TrimSpace(string(tok))
-			if str != "" {
-				fmt.Printf("%s", strings.Repeat("\t", level))
-				fmt.Println(str)
+			if str != "" && len(nodeStack) > 0 {
+				var parentNode *Element
+				parentNode = nodeStack[len(nodeStack)-1]
+				parentNode.Children = append(parentNode.Children, CharData(str))
 			}
-			// add to topmost nodeStack item as child
 		}
 	}
+	root := nodeStack[0]
+	printTree(root)
+}
+
+var level = 0
+
+func printTree(node Node) {
+	indent := strings.Repeat("\t", level)
+	switch n := node.(type) {
+	case *Element:
+		fmt.Printf("%s<%s %v>\n", indent, n.Type.Local, attrToStr(n.Attr))
+		level += 1
+		for _, child := range n.Children {
+			printTree(child)
+		}
+		level -= 1
+		fmt.Printf("%s</%s>\n", indent, n.Type.Local)
+	case CharData:
+		fmt.Printf("%s%s\n", indent, n)
+	}
+}
+
+func attrToStr(attr []xml.Attr) string {
+	var list []string
+	for _, a := range attr {
+		list = append(list, fmt.Sprintf(`%s="%s"`, a.Name.Local, a.Value))
+	}
+	return strings.Join(list, " ")
 }
