@@ -13,7 +13,7 @@ import (
 func main() {
 	stdin := bufio.NewReader(os.Stdin)
 	for {
-		fmt.Println("expression (such as 2*x + 3*y):\t")
+		fmt.Printf("expression (such as 2*x + 3*y):\t")
 		input, err := stdin.ReadString('\n')
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "reading string from stdin: %v\n", err)
@@ -24,7 +24,7 @@ func main() {
 			fmt.Fprintf(os.Stderr, "parsing input '%s': %v\n", input, err)
 			continue
 		}
-		fmt.Println("variables (such as x=3, y=2):\t")
+		fmt.Printf("variables (such as x=3, y=2):\t")
 		input, err = stdin.ReadString('\n')
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "reading string from stdin: %v\n", err)
@@ -33,12 +33,11 @@ func main() {
 		definitions := strings.Split(input, ",")
 		environment := make(map[eval.Var]float64)
 		for _, def := range definitions {
-			parts := strings.Split(def, "=")
+			parts := strings.Split(strings.TrimSpace(def), "=")
 			if len(parts) != 2 {
 				fmt.Fprintf(os.Stderr, "parsing definition '%s' failed\n", parts)
 				continue
 			}
-			// TODO: trim all parts
 			key := eval.Var(parts[0])
 			value, err := strconv.ParseFloat(parts[1], 64)
 			if err != nil {
