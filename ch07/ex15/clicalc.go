@@ -4,8 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
-	"strings"
 
 	"gopl.io/ch07/eval"
 )
@@ -30,23 +28,12 @@ func main() {
 			fmt.Fprintf(os.Stderr, "reading string from stdin: %v\n", err)
 			continue
 		}
-		definitions := strings.Split(input, ",")
-		environment := make(map[eval.Var]float64)
-		for _, def := range definitions {
-			parts := strings.Split(strings.TrimSpace(def), "=")
-			if len(parts) != 2 {
-				fmt.Fprintf(os.Stderr, "parsing definition '%s' failed\n", parts)
-				continue
-			}
-			key := eval.Var(parts[0])
-			value, err := strconv.ParseFloat(parts[1], 64)
-			if err != nil {
-				fmt.Fprintf(os.Stderr, "parse '%s' as float: %v\n", parts[1], err)
-				continue
-			}
-			environment[key] = value
+		environment, err := eval.ParseVarDefs(input)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "parse '%s': %v", input, err)
+			continue
 		}
-		result := expr.Eval(eval.Env(environment))
+		result := expr.Eval(environment)
 		fmt.Println(result)
 	}
 }
