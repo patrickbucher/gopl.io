@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<company size="big" branch="software">
+	<department type="rights" usefulness="questionable" size="huge">
+		<employee salary="exorbitant" function="boss">John Doe</employee>
+		<employee salary="small" function="underling">George Duff</employee>
+		<employee salary="small" function="underling">Wayne Cares</employee>
+	</department>
+	<department type="engineering" usefulness="inquestionable" size="small">
+		<employee salary="small" function="programmer">Patrick Bucher</employee>
+	</department>
+	<department type="administration" usefulness="inquestionable" size="medium">
+		<employee salary="exorbitant" function="boss">F. King Bitch</employee>
+		<employee salary="small" function="secretary">Sarah Sorry</employee>
+	</department>
+</company>
