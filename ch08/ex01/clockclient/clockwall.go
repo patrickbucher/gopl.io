@@ -3,11 +3,12 @@ package main
 import (
 	"fmt"
 	"io"
-	"log"
 	"net"
 	"os"
+	"sort"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type timeServer struct {
@@ -49,6 +50,11 @@ func parseTimeServer(spec string) (*timeServer, error) {
 	return &ts, nil
 }
 
+type timeInfo struct {
+	location string
+	time     string
+}
+
 func main() {
 	var servers []*timeServer
 	for _, arg := range os.Args[1:] {
@@ -63,6 +69,16 @@ func main() {
 		fmt.Fprintln(os.Stderr, "no suitable time servers defined, exiting")
 		os.Exit(1)
 	}
+	timeChan := make(chan timeInfo)
+	times := make(map[string]string)
+	go func() {
+		for {
+			select {
+			case msg := <-timeChan:
+				times[msg.location] = msg.time
+			}
+		}
+	}()
 	for _, server := range servers {
 		conn, err := net.Dial("tcp", server.Socket())
 		if err != nil {
@@ -70,13 +86,39 @@ func main() {
 			continue
 		}
 		defer conn.Close()
-		go displayTime(conn, server)
+		go func(c chan<- timeInfo, s *timeServer, r io.Reader) {
+			buf := make([]byte, 100)
+			for {
+				n, err := r.Read(buf)
+				if err != nil {
+					if err == io.EOF {
+						return
+					}
+					fmt.Fprintf(os.Stderr, "reading from %s: %v", s, err)
+				}
+				if n > 0 {
+					time := strings.TrimSpace(string(buf[:n]))
+					c <- timeInfo{s.location, time}
+				} else {
+					fmt.Fprintf(os.Stderr, "nothing read from %s", s)
+				}
+			}
+		}(timeChan, server, conn)
 	}
+	output(times)
 }
 
-func displayTime(src io.Reader, srv *timeServer) {
-	fmt.Printf("%s: ", srv.location)
-	if _, err := io.Copy(os.Stdout, src); err != nil {
-		log.Fatal(err)
+func output(times map[string]string) {
+	for {
+		var keys []string
+		for k := range times {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			fmt.Printf("%s: %s\t", k, times[k])
+		}
+		fmt.Println()
+		time.Sleep(time.Second)
 	}
 }
