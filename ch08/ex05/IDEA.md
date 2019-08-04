@@ -1,4 +1,0 @@
-- create a program that sums up huge slices of integers
-- create a sum function, accepting an argument defining the number of goroutines to be used
-- benchmark the function using different numbers of goroutines
-- consider experimenting with buffer sizes
