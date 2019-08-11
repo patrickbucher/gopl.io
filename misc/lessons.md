@@ -16,6 +16,7 @@
   variable through a mutex.
 - The code section between the mutexe's lock and unlock is called the _critical
   section_ of a concurrent function.
+- Mutexes are not _re-entrant_: a mutex already locked cannot be locked again.
 
 ## Benchmarking
 
