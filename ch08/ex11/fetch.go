@@ -25,9 +25,9 @@ func main() {
 	responses := make(chan string, len(urls))
 	var wg sync.WaitGroup
 	for _, url := range urls {
+		wg.Add(1)
 		go func(url string) {
 			defer wg.Done()
-			wg.Add(1)
 			req, err := http.NewRequest("GET", url, nil)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "build request to %s: %v\n", url, err)
