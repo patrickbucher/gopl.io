@@ -2,7 +2,9 @@
 // memoization of a function of type Func.
 package memo
 
-import "errors"
+import (
+	"errors"
+)
 
 // Func is the type of the function to memoize.
 type Func func(key string, done <-chan struct{}) (interface{}, error)
@@ -76,12 +78,14 @@ func (e *entry) call(f Func, key string) {
 	case r := <-finished:
 		e.res.value = r.value
 		e.res.err = r.err
+		break
 	case <-e.done:
-		e.cancel <- struct{}{}
+		close(e.cancel)
 		e.res = result{
 			value: nil,
 			err:   errors.New("operation cancelled"),
 		}
+		break
 	}
 	// Broadcast the ready condition.
 	close(e.ready)

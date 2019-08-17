@@ -9,12 +9,12 @@ import (
 	"time"
 )
 
-func httpGetBody(url string, done <-chan struct{}) (interface{}, error) {
+func httpGetBody(url string, cancel <-chan struct{}) (interface{}, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Cancel = done
+	req.Cancel = cancel
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, err
@@ -25,19 +25,33 @@ func httpGetBody(url string, done <-chan struct{}) (interface{}, error) {
 
 // NOTE: this test is fleaky, for the timing is only an educated guess.
 func TestCancel(t *testing.T) {
-	url := "https://news.ycombinator.com" // approx. 600ms
+	var tests = []struct {
+		url   string
+		await time.Duration
+	}{
+		{"https://news.ycombinator.com", time.Millisecond * 100},
+		{"https://golang.org", time.Second * 2},
+	}
 	m := New(httpGetBody)
-	start := time.Now()
-	cancel := make(chan struct{})
-	go func() {
-		_, err := m.Get(url, cancel)
-		if err != nil {
-			t.Log(err)
-		}
-	}()
-	time.Sleep(600 * time.Millisecond)
-	cancel <- struct{}{}
-	t.Log(time.Since(start))
+	for _, test := range tests {
+		start := time.Now()
+		cancel := make(chan struct{}, 1) // non-blocking
+		finished := make(chan struct{})
+		go func() {
+			_, err := m.Get(test.url, cancel)
+			if err != nil {
+				t.Log(test.url, err)
+			} else {
+				t.Log(test.url, "retrieved")
+			}
+			finished <- struct{}{}
+		}()
+		time.Sleep(test.await)
+		cancel <- struct{}{}
+		t.Log(time.Since(start))
+		<-finished
+	}
+	m.Close()
 }
 
 func incomingURLs() []string {
