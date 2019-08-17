@@ -10,7 +10,7 @@ import (
 )
 
 func httpGetBody(url string, cancel <-chan struct{}) (interface{}, error) {
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
