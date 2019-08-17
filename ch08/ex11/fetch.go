@@ -28,7 +28,7 @@ func main() {
 		wg.Add(1)
 		go func(url string) {
 			defer wg.Done()
-			req, err := http.NewRequest("GET", url, nil)
+			req, err := http.NewRequest(http.MethodGet, url, nil)
 			if err != nil {
 				fmt.Fprintf(os.Stderr, "build request to %s: %v\n", url, err)
 				return
