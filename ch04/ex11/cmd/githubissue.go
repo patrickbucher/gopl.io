@@ -160,7 +160,7 @@ func postIssue(issue *Issue, url string) error {
 	}
 	client := &http.Client{}
 	reader := bytes.NewReader(json)
-	req, err := http.NewRequest("POST", url, reader)
+	req, err := http.NewRequest(http.MethodPost, url, reader)
 	if err != nil {
 		return fmt.Errorf("init POST to %s: %v", issuesURL, err)
 	}
@@ -180,7 +180,7 @@ func fetchIssue(issueNumber int) (*IssueView, error) {
 	url := issuesURL + "/" + fmt.Sprintf("%d", issueNumber)
 	fmt.Println(url)
 	client := &http.Client{}
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, fmt.Errorf("init GET to %s: %v\n", url, err)
 	}

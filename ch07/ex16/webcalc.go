@@ -17,7 +17,7 @@ func main() {
 }
 
 func input(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "GET" {
+	if r.Method != http.MethodGet {
 		http.Error(w, "only GET supported", http.StatusMethodNotAllowed)
 		return
 	}
@@ -31,7 +31,7 @@ func input(w http.ResponseWriter, r *http.Request) {
 }
 
 func calculate(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
+	if r.Method != http.MethodPost {
 		http.Error(w, "only POST supported", http.StatusMethodNotAllowed)
 		return
 	}

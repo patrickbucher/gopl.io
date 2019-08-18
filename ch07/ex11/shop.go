@@ -32,7 +32,7 @@ func (db database) list(w http.ResponseWriter, req *http.Request) {
 }
 
 func (db database) create(w http.ResponseWriter, req *http.Request) {
-	if req.Method != "POST" {
+	if req.Method != http.MethodPost {
 		fail(http.StatusMethodNotAllowed, w)
 		return
 	}
@@ -62,7 +62,7 @@ func (db database) create(w http.ResponseWriter, req *http.Request) {
 }
 
 func (db database) read(w http.ResponseWriter, req *http.Request) {
-	if req.Method != "GET" {
+	if req.Method != http.MethodGet {
 		fail(http.StatusMethodNotAllowed, w)
 		return
 	}

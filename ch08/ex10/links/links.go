@@ -17,7 +17,7 @@ func Cancel() {
 // Extract makes an HTTP GET request to the specified URL, parses
 // the response as HTML, and returns the links in the HTML document.
 func Extract(url string) ([]string, error) {
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
